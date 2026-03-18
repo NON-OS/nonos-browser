@@ -19,7 +19,7 @@ mod wallet;
 mod work_metrics;
 
 use state::AppState;
-use tauri::Manager;
+use tauri::{Manager, WebviewWindowBuilder};
 
 #[tauri::command]
 fn get_app_info() -> types::AppInfo {
@@ -41,9 +41,10 @@ fn main() {
     let network_state_for_setup = state.network.clone();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .manage(state)
         .setup(move |app| {
-            let window = app.get_window("main").unwrap();
+            let window = app.get_webview_window("main").unwrap();
 
             tauri::async_runtime::spawn(async move {
                 proxy::start_local_proxy_server().await;

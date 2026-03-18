@@ -79,7 +79,7 @@ pub async fn proxy_fetch(
         .map_err(|e| format!("Failed to read response: {}", e))?;
 
     Ok(ProxyFetchResponse {
-        success: status_code >= 200 && status_code < 400,
+        success: (200..400).contains(&status_code),
         status_code,
         headers: resp_headers,
         body: body_text,

@@ -2,6 +2,7 @@ use super::rlp;
 use k256::ecdsa::SigningKey;
 use tiny_keccak::{Hasher, Keccak};
 
+#[allow(clippy::too_many_arguments)]
 pub fn sign_transaction(
     private_key_hex: &str,
     to: &str,

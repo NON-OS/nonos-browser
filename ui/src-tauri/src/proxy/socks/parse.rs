@@ -28,7 +28,7 @@ pub fn extract_header(headers: &str, name: &str) -> Option<String> {
     headers
         .lines()
         .find(|l| l.to_lowercase().starts_with(&search))
-        .map(|l| l.splitn(2, ':').nth(1).unwrap_or("").trim().to_string())
+        .map(|l| l.split_once(':').map(|(_, v)| v).unwrap_or("").trim().to_string())
 }
 
 pub fn decompress(data: &[u8], encoding: &str) -> Result<Vec<u8>, String> {

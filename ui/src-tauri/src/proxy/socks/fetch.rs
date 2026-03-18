@@ -6,14 +6,13 @@ use std::future::Future;
 use std::pin::Pin;
 use tokio_socks::tcp::Socks5Stream;
 
+type FetchResult = Pin<Box<dyn Future<Output = Result<(u16, String, Vec<u8>), String>> + Send>>;
+
 pub async fn fetch(url: &str) -> Result<(u16, String, Vec<u8>), String> {
     fetch_inner(url.to_string(), 0).await
 }
 
-fn fetch_inner(
-    url: String,
-    depth: u8,
-) -> Pin<Box<dyn Future<Output = Result<(u16, String, Vec<u8>), String>> + Send>> {
+fn fetch_inner(url: String, depth: u8) -> FetchResult {
     Box::pin(async move {
         if depth > MAX_REDIRECTS {
             return Err("Too many redirects".to_string());

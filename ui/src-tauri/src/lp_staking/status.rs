@@ -81,17 +81,17 @@ pub async fn lp_get_status(_state: State<'_, AppState>) -> Result<LPStakingStatu
                     let lock_id = u64::from_str_radix(&data[offset..offset + 64], 16).unwrap_or(0);
                     let amount = parse_u256(&data[offset + 64..offset + 128]);
                     let tier = u8::from_str_radix(
-                        &data[offset + 128..offset + 192].trim_start_matches('0'),
+                        data[offset + 128..offset + 192].trim_start_matches('0'),
                         16,
                     )
                     .unwrap_or(0);
                     let lock_start = u64::from_str_radix(
-                        &data[offset + 192..offset + 256].get(..64).unwrap_or("0"),
+                        data[offset + 192..offset + 256].get(..64).unwrap_or("0"),
                         16,
                     )
                     .unwrap_or(0);
                     let lock_end = u64::from_str_radix(
-                        &data[offset + 256..offset + 320].get(..64).unwrap_or("0"),
+                        data[offset + 256..offset + 320].get(..64).unwrap_or("0"),
                         16,
                     )
                     .unwrap_or(0);

@@ -19,14 +19,12 @@ pub async fn inline_css(html: &str, page_url: &str) -> String {
                 if let Some(href) = href_cap.get(1) {
                     let css_url = resolve_url(href.as_str(), &base, page_url);
 
-                    if let Ok(css) =
+                    if let Ok(Ok(css_content)) =
                         tokio::time::timeout(std::time::Duration::from_secs(5), fetch_css(&css_url))
                             .await
                     {
-                        if let Ok(css_content) = css {
-                            let style_tag = format!("<style>{}</style>", css_content);
-                            result = result.replace(&link, &style_tag);
-                        }
+                        let style_tag = format!("<style>{}</style>", css_content);
+                        result = result.replace(&link, &style_tag);
                     }
                 }
             }

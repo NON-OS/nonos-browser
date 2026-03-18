@@ -31,6 +31,9 @@ node_modules
 # Logs
 *.log
 
+# Vite cache/timestamp files
+*.timestamp-*.mjs
+
 # Misc
 ~
 ui/src-tauri/binaries/

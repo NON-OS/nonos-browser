@@ -2,7 +2,7 @@ use super::state::get_browser_windows;
 use crate::proxy::LOCAL_PROXY_PORT;
 use crate::state::{AppState, ConnectionStatus};
 use std::sync::atomic::Ordering;
-use tauri::{State, Window};
+use tauri::{Emitter, State, Window};
 
 #[tauri::command]
 pub async fn browser_navigate(

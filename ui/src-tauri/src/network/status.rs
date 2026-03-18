@@ -1,6 +1,6 @@
 use crate::state::{ConnectionStatus, NetworkState};
 use crate::types::NetworkStatusResponse;
-use tauri::Window;
+use tauri::{Emitter, Window};
 
 pub fn create_response(network: &NetworkState) -> NetworkStatusResponse {
     NetworkStatusResponse {

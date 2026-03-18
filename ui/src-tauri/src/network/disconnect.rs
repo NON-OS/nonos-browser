@@ -1,7 +1,7 @@
 use crate::proxy::set_proxy_connected;
 use crate::state::{AppState, ConnectionStatus};
 use crate::types::NetworkStatusResponse;
-use tauri::{State, Window};
+use tauri::{Emitter, State, Window};
 
 use super::status;
 

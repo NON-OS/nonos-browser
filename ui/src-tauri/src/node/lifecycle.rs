@@ -2,7 +2,7 @@ use super::binary::find_nonos_node_binary;
 use crate::state::AppState;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
-use tauri::{State, Window};
+use tauri::{Emitter, State, Window};
 
 #[tauri::command]
 pub async fn node_start_embedded(state: State<'_, AppState>, window: Window) -> Result<(), String> {

@@ -1,12 +1,12 @@
 use super::state::get_browser_windows;
 use crate::proxy::LOCAL_PROXY_PORT;
 use crate::state::AppState;
-use tauri::{Manager, State};
+use tauri::State;
 
 #[tauri::command]
 pub async fn browser_close_tab(app_handle: tauri::AppHandle, tab_id: u32) -> Result<(), String> {
     let window_label = format!("browser-{}", tab_id);
-    if let Some(window) = app_handle.get_window(&window_label) {
+    if let Some(window) = app_handle.get_webview_window(&window_label) {
         window.close().map_err(|e| e.to_string())?;
     }
     get_browser_windows().lock().unwrap().remove(&tab_id);

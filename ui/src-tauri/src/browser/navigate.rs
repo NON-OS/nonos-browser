@@ -56,10 +56,10 @@ pub async fn browser_navigate(
         target_url.clone()
     };
 
-    let _browser_window = tauri::WindowBuilder::new(
+    let _browser_window = tauri::WebviewWindowBuilder::new(
         &app_handle,
         &window_label,
-        tauri::WindowUrl::External(
+        tauri::WebviewUrl::External(
             browser_url
                 .parse()
                 .map_err(|e| format!("Invalid URL: {}", e))?,

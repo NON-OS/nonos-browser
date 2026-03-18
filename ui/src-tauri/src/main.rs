@@ -19,7 +19,7 @@ mod wallet;
 mod work_metrics;
 
 use state::AppState;
-use tauri::{Manager, WebviewWindowBuilder};
+use tauri::Manager;
 
 #[tauri::command]
 fn get_app_info() -> types::AppInfo {

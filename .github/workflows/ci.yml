@@ -31,6 +31,9 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -41,6 +44,8 @@ jobs:
           curl -L "https://github.com/nymtech/nym/releases/download/${{ env.NYM_TAG }}/nym-socks5-client" -o ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu
           cp ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu ui/src-tauri/binaries/anon-gencert-x86_64-unknown-linux-gnu
           chmod +x ui/src-tauri/binaries/*
+      - name: Build frontend
+        run: cd ui && npm install && npm run build
       - run: cargo clippy --workspace -- -D warnings
 
   test:

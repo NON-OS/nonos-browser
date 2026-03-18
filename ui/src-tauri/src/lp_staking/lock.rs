@@ -11,7 +11,7 @@ pub async fn lp_lock(
     amount: String,
     tier: u8,
 ) -> Result<String, String> {
-    validate_tier(tier)?;
+    validate_tier(tier).map_err(|e| e.to_string())?;
 
     let manager = WALLET_MANAGER.read().await;
     let wallet = manager.active().ok_or("Wallet not unlocked")?;
@@ -25,7 +25,7 @@ pub async fn lp_lock(
     let address = wallet.address().to_hex();
     drop(manager);
 
-    let amount_nox = validate_amount(&amount)?;
+    let amount_nox = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_nox * 1e18) as u128;
 
     let (_, sepolia_nox) = fetch_sepolia_balances(&address).await;
@@ -141,7 +141,7 @@ pub async fn lp_extend_lock(
     lock_id: u64,
     new_tier: u8,
 ) -> Result<String, String> {
-    validate_tier(new_tier)?;
+    validate_tier(new_tier).map_err(|e| e.to_string())?;
 
     let manager = WALLET_MANAGER.read().await;
     let wallet = manager.active().ok_or("Wallet not unlocked")?;

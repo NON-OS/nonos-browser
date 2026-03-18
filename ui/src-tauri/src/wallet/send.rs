@@ -26,8 +26,8 @@ pub async fn wallet_send_eth(
     let from_address = wallet.address().to_hex();
     drop(manager);
 
-    validate_eth_address(&to)?;
-    let amount_eth = validate_amount(&amount)?;
+    validate_eth_address(&to).map_err(|e| e.to_string())?;
+    let amount_eth = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_eth * 1e18) as u128;
 
     let (eth_balance, _) = fetch_mainnet_balances(&from_address).await;
@@ -73,8 +73,8 @@ pub async fn wallet_send_nox(
     let from_address = wallet.address().to_hex();
     drop(manager);
 
-    validate_eth_address(&to)?;
-    let amount_nox = validate_amount(&amount)?;
+    validate_eth_address(&to).map_err(|e| e.to_string())?;
+    let amount_nox = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_nox * 1e18) as u128;
 
     let (eth_balance, nox_balance) = fetch_mainnet_balances(&from_address).await;

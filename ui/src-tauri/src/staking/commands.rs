@@ -20,7 +20,7 @@ pub async fn staking_stake(_state: State<'_, AppState>, amount: String) -> Resul
     let address = wallet.address().to_hex();
     drop(manager);
 
-    let amount_nox = validate_amount(&amount)?;
+    let amount_nox = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_nox * 1e18) as u128;
 
     let (_, sepolia_nox) = fetch_sepolia_balances(&address).await;
@@ -82,7 +82,7 @@ pub async fn staking_unstake(
         .map_err(|e| format!("Failed to get signing key: {}", e))?;
     drop(manager);
 
-    let amount_nox = validate_amount(&amount)?;
+    let amount_nox = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_nox * 1e18) as u128;
 
     let unstake_data = format!("0x34dfb268{:0>64}", format!("{:x}", amount_wei));

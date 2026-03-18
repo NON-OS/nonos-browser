@@ -6,7 +6,7 @@ use tauri::State;
 
 #[tauri::command]
 pub async fn wallet_create(state: State<'_, AppState>, password: String) -> Result<String, String> {
-    validate_password(&password)?;
+    validate_password(&password).map_err(|e| e.to_string())?;
 
     let (wallet, mnemonic, _blake3_key) = Wallet::create("Default Wallet".to_string())
         .map_err(|e| format!("Failed to create wallet: {}", e))?;
@@ -42,8 +42,8 @@ pub async fn wallet_import(
     mnemonic: String,
     password: String,
 ) -> Result<(), String> {
-    validate_password(&password)?;
-    validate_mnemonic(&mnemonic)?;
+    validate_password(&password).map_err(|e| e.to_string())?;
+    validate_mnemonic(&mnemonic).map_err(|e| e.to_string())?;
 
     let wallet = Wallet::import_from_mnemonic("Imported Wallet".to_string(), &mnemonic)
         .map_err(|e| format!("Failed to import wallet: {}", e))?;

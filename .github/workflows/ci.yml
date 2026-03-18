@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  NYM_TAG: "nym-binaries-v2026.5-raclette"
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Download Nym binary
+        run: |
+          mkdir -p ui/src-tauri/binaries
+          curl -L "https://github.com/nymtech/nym/releases/download/${{ env.NYM_TAG }}/nym-socks5-client" -o ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu
+          cp ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu ui/src-tauri/binaries/anon-gencert-x86_64-unknown-linux-gnu
+          chmod +x ui/src-tauri/binaries/*
+      - run: cargo clippy --workspace -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p nonos-types -p nonos-crypto -p nonos-wallet
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Download Nym binary (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          mkdir -p ui/src-tauri/binaries
+          curl -L "https://github.com/nymtech/nym/releases/download/${{ env.NYM_TAG }}/nym-socks5-client" -o ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu
+          cp ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu ui/src-tauri/binaries/anon-gencert-x86_64-unknown-linux-gnu
+          chmod +x ui/src-tauri/binaries/*
+      - name: Build Nym binary (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          git clone --depth 1 --branch ${{ env.NYM_TAG }} https://github.com/nymtech/nym nym-src
+          cd nym-src && cargo build --release -p nym-socks5-client
+          mkdir -p ../ui/src-tauri/binaries
+          cp target/release/nym-socks5-client ../ui/src-tauri/binaries/anon-aarch64-apple-darwin
+          cp target/release/nym-socks5-client ../ui/src-tauri/binaries/anon-gencert-aarch64-apple-darwin
+          cp target/release/nym-socks5-client ../ui/src-tauri/binaries/anon-x86_64-apple-darwin
+          cp target/release/nym-socks5-client ../ui/src-tauri/binaries/anon-gencert-x86_64-apple-darwin
+          chmod +x ../ui/src-tauri/binaries/*
+      - name: Build Nym binary (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          git clone --depth 1 --branch ${{ env.NYM_TAG }} https://github.com/nymtech/nym nym-src
+          cd nym-src && cargo build --release -p nym-socks5-client
+          mkdir -p ../ui/src-tauri/binaries
+          cp target/release/nym-socks5-client.exe ../ui/src-tauri/binaries/anon-x86_64-pc-windows-msvc.exe
+          cp target/release/nym-socks5-client.exe ../ui/src-tauri/binaries/anon-gencert-x86_64-pc-windows-msvc.exe
+      - name: Install frontend dependencies
+        run: cd ui && npm install
+      - name: Build frontend
+        run: cd ui && npm run build
+      - name: Build Tauri app
+        run: cd ui && npm run tauri build

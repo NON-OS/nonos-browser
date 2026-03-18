@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  NYM_REPO: "https://github.com/nymtech/nym"
+  NYM_TAG: "nym-binaries-v2026.5-raclette"
+
+jobs:
+  build-macos:
+    name: macOS (${{ matrix.arch }})
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            target: aarch64-apple-darwin
+          - arch: x86_64
+            target: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Nym socks5-client
+        run: |
+          git clone --depth 1 --branch ${{ env.NYM_TAG }} ${{ env.NYM_REPO }} nym-src
+          cd nym-src
+          cargo build --release --target ${{ matrix.target }} -p nym-socks5-client
+          mkdir -p ../ui/src-tauri/binaries
+          cp target/${{ matrix.target }}/release/nym-socks5-client ../ui/src-tauri/binaries/anon-${{ matrix.target }}
+          cp target/${{ matrix.target }}/release/nym-socks5-client ../ui/src-tauri/binaries/anon-gencert-${{ matrix.target }}
+          chmod +x ../ui/src-tauri/binaries/*
+
+      - name: Install frontend dependencies
+        run: cd ui && npm install
+
+      - name: Build
+        run: cd ui && npm run tauri build -- --target ${{ matrix.target }}
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonos-browser-macos-${{ matrix.arch }}
+          path: ui/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+
+  build-linux:
+    name: Linux (x86_64)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Download Nym binary
+        run: |
+          mkdir -p ui/src-tauri/binaries
+          curl -L "https://github.com/nymtech/nym/releases/download/${{ env.NYM_TAG }}/nym-socks5-client" -o ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu
+          cp ui/src-tauri/binaries/anon-x86_64-unknown-linux-gnu ui/src-tauri/binaries/anon-gencert-x86_64-unknown-linux-gnu
+          chmod +x ui/src-tauri/binaries/*
+
+      - name: Install frontend dependencies
+        run: cd ui && npm install
+
+      - name: Build
+        run: cd ui && npm run tauri build
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonos-browser-linux-x86_64
+          path: ui/src-tauri/target/release/bundle/appimage/*.AppImage
+
+      - name: Upload Deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonos-browser-linux-deb
+          path: ui/src-tauri/target/release/bundle/deb/*.deb
+
+  build-windows:
+    name: Windows (x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Nym socks5-client
+        shell: bash
+        run: |
+          git clone --depth 1 --branch ${{ env.NYM_TAG }} ${{ env.NYM_REPO }} nym-src
+          cd nym-src
+          cargo build --release -p nym-socks5-client
+          mkdir -p ../ui/src-tauri/binaries
+          cp target/release/nym-socks5-client.exe ../ui/src-tauri/binaries/anon-x86_64-pc-windows-msvc.exe
+          cp target/release/nym-socks5-client.exe ../ui/src-tauri/binaries/anon-gencert-x86_64-pc-windows-msvc.exe
+
+      - name: Install frontend dependencies
+        run: cd ui && npm install
+
+      - name: Build
+        run: cd ui && npm run tauri build
+
+      - name: Upload MSI
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonos-browser-windows-x86_64
+          path: ui/src-tauri/target/release/bundle/msi/*.msi
+
+  release:
+    name: Create Release
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display artifacts
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.msi
+          body: |
+            ## NONOS Browser ${{ github.ref_name }}
+
+            Privacy browser with native Nym mixnet integration.
+
+            ### Downloads
+            - **macOS (Apple Silicon)**: `NONOS-Browser_*_aarch64.dmg`
+            - **macOS (Intel)**: `NONOS-Browser_*_x64.dmg`
+            - **Linux (AppImage)**: `nonos-browser_*.AppImage`
+            - **Linux (Deb)**: `nonos-browser_*.deb`
+            - **Windows**: `NONOS-Browser_*.msi`
+
+            ### What's Included
+            - Nym mixnet client (auto-bundled)
+            - NOX wallet with Sepolia testnet support
+            - Staking interface
+
+            ### Requirements
+            - macOS 12+ / Ubuntu 22.04+ / Windows 11
+            - Internet connection for Nym mixnet
+          draft: false
+          prerelease: false

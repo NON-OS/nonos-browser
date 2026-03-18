@@ -1,0 +1,25 @@
+pub const NONOS_API_URL: &str = "http://127.0.0.1:8420/api";
+
+pub const KNOWN_TRACKERS: &[&str] = &[
+    "google-analytics.com",
+    "googletagmanager.com",
+    "facebook.com",
+    "connect.facebook.net",
+    "doubleclick.net",
+    "googlesyndication.com",
+    "googleadservices.com",
+    "amazon-adsystem.com",
+    "scorecardresearch.com",
+    "quantserve.com",
+    "adsrvr.org",
+    "criteo.com",
+    "taboola.com",
+    "outbrain.com",
+    "chartbeat.com",
+    "mixpanel.com",
+    "segment.io",
+    "amplitude.com",
+    "hotjar.com",
+    "fullstory.com",
+    "clarity.ms",
+];

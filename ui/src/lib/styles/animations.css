@@ -1,0 +1,79 @@
+@keyframes cyber-pulse {
+	0%, 100% {
+		box-shadow: 0 0 5px var(--cyber-cyan-glow), 0 0 10px var(--cyber-cyan-glow);
+	}
+	50% {
+		box-shadow: 0 0 20px var(--cyber-cyan-glow), 0 0 40px var(--cyber-cyan-glow);
+	}
+}
+
+@keyframes cyber-glow-breathe {
+	0%, 100% { opacity: 0.6; }
+	50% { opacity: 1; }
+}
+
+@keyframes cyber-border-flow {
+	0% { background-position: 100% 100%, 0% 50%; }
+	100% { background-position: 100% 100%, 200% 50%; }
+}
+
+@keyframes cyber-scan {
+	0% { transform: translateY(-100%); }
+	100% { transform: translateY(100%); }
+}
+
+@keyframes cyber-glitch-1 {
+	0%, 100% { transform: translate(0); }
+	20% { transform: translate(-2px, 2px); }
+	40% { transform: translate(-2px, -2px); }
+	60% { transform: translate(2px, 2px); }
+	80% { transform: translate(2px, -2px); }
+}
+
+@keyframes cyber-glitch-2 {
+	0%, 100% { transform: translate(0); }
+	20% { transform: translate(2px, -2px); }
+	40% { transform: translate(2px, 2px); }
+	60% { transform: translate(-2px, -2px); }
+	80% { transform: translate(-2px, 2px); }
+}
+
+@keyframes cyber-flicker {
+	0%, 100% { opacity: 1; }
+	92% { opacity: 1; }
+	93% { opacity: 0.3; }
+	94% { opacity: 1; }
+	96% { opacity: 0.5; }
+	97% { opacity: 1; }
+}
+
+@keyframes cyber-data-flow {
+	0% { background-position: 0% 0%; }
+	100% { background-position: 0% 100%; }
+}
+
+@keyframes neon-pulse {
+	0%, 100% {
+		text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+	}
+	50% {
+		text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+	}
+}
+
+@keyframes circuit-trace {
+	0% { stroke-dashoffset: 1000; }
+	100% { stroke-dashoffset: 0; }
+}
+
+@keyframes terminal-cursor {
+	0%, 50% { opacity: 1; }
+	51%, 100% { opacity: 0; }
+}
+
+@keyframes matrix-fall {
+	0% { transform: translateY(-100%); opacity: 0; }
+	10% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { transform: translateY(100%); opacity: 0; }
+}

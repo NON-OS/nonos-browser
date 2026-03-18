@@ -1,0 +1,78 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devPath": "http://localhost:5173",
+    "distDir": "../build",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "NONOS Ecosystem",
+    "version": "1.0.5"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "open": true
+      },
+      "window": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "DeveloperTool",
+      "copyright": "Copyright (c) 2024 NON-OS",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": ["binaries/anon", "binaries/anon-gencert"],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "systems.nonos.noxone",
+      "longDescription": "NONOS Ecosystem is a zero-trust privacy browser built on the Anyone Network. All traffic is routed through community-powered multi-hop encrypted relays with built-in NOX token wallet and node staking.",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [],
+      "shortDescription": "Privacy-first trustless browser",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": "default-src 'self' http://localhost:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*; style-src 'self' 'unsafe-inline' http://localhost:* https://*; img-src 'self' data: blob: http://localhost:* https://*; font-src 'self' data: http://localhost:* https://*; frame-src 'self' http://localhost:*; connect-src 'self' http://localhost:* https://*"
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 800,
+        "resizable": true,
+        "title": "NONOS Ecosystem",
+        "width": 1200,
+        "center": true,
+        "decorations": true,
+        "transparent": false,
+        "minWidth": 800,
+        "minHeight": 600
+      }
+    ]
+  }
+}

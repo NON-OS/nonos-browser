@@ -54,7 +54,6 @@ pub async fn network_connect(
             &client_id,
             "--port",
             &network.socks_addr.port().to_string(),
-            "--two-hop",
             "--fastmode",
             "--no-cover",
         ])

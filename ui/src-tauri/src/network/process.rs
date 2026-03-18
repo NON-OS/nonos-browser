@@ -62,7 +62,6 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
             &client_id,
             "--port",
             &network.socks_addr.port().to_string(),
-            "--two-hop",
             "--fastmode",
             "--no-cover",
         ])

@@ -38,7 +38,19 @@ pub async fn network_disconnect(state: State<'_, AppState>, window: Window) -> R
 pub async fn network_get_status(
     state: State<'_, AppState>,
 ) -> Result<NetworkStatusResponse, String> {
-    let network = state.network.read().await;
+    use tokio::net::TcpStream;
+
+    let mut network = state.network.write().await;
+
+    if !matches!(network.status, ConnectionStatus::Connected)
+        && TcpStream::connect(network.socks_addr).await.is_ok()
+    {
+        network.status = ConnectionStatus::Connected;
+        network.bootstrap_progress = 100;
+        network.circuits = 3;
+        set_proxy_connected(true);
+    }
+
     Ok(status::create_response(&network))
 }
 

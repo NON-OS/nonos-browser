@@ -3,6 +3,49 @@ use tokio::process::Command;
 
 pub async fn find_nym_binary() -> Result<PathBuf, String> {
     let is_windows = std::env::consts::OS == "windows";
+
+    let sidecar_name = if is_windows { "anon.exe" } else { "anon" };
+    let target_triple = format!(
+        "{}-{}",
+        std::env::consts::ARCH,
+        match (std::env::consts::OS, std::env::consts::ARCH) {
+            ("macos", _) => "apple-darwin",
+            ("linux", _) => "unknown-linux-gnu",
+            ("windows", _) => "pc-windows-msvc",
+            _ => "unknown",
+        }
+    );
+    let sidecar_with_triple = if is_windows {
+        format!("anon-{}.exe", target_triple)
+    } else {
+        format!("anon-{}", target_triple)
+    };
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let sidecar_path = exe_dir.join(sidecar_name);
+            if sidecar_path.exists() {
+                return Ok(sidecar_path);
+            }
+        }
+    }
+
+    let dev_paths = [
+        PathBuf::from(format!("binaries/{}", sidecar_with_triple)),
+        PathBuf::from(format!("src-tauri/binaries/{}", sidecar_with_triple)),
+        PathBuf::from(format!("../src-tauri/binaries/{}", sidecar_with_triple)),
+        PathBuf::from(format!(
+            "{}/binaries/{}",
+            std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default(),
+            sidecar_with_triple
+        )),
+    ];
+    for path in &dev_paths {
+        if path.exists() {
+            return Ok(path.clone());
+        }
+    }
+
     let binary_name = if is_windows {
         "nym-socks5-client.exe"
     } else {

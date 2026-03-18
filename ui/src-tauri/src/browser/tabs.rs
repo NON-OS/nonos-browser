@@ -1,7 +1,7 @@
 use super::state::get_browser_windows;
 use crate::proxy::LOCAL_PROXY_PORT;
 use crate::state::AppState;
-use tauri::State;
+use tauri::{Manager, State};
 
 #[tauri::command]
 pub async fn browser_close_tab(app_handle: tauri::AppHandle, tab_id: u32) -> Result<(), String> {

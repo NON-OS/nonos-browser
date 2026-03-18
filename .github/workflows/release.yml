@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nonos-browser-macos-${{ matrix.arch }}
-          path: ui/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
           if-no-files-found: warn
 
   build-linux:
@@ -95,14 +95,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nonos-browser-linux-x86_64
-          path: ui/src-tauri/target/release/bundle/appimage/*.AppImage
+          path: target/release/bundle/appimage/*.AppImage
           if-no-files-found: warn
 
       - name: Upload Deb
         uses: actions/upload-artifact@v4
         with:
           name: nonos-browser-linux-deb
-          path: ui/src-tauri/target/release/bundle/deb/*.deb
+          path: target/release/bundle/deb/*.deb
           if-no-files-found: warn
 
   build-windows:
@@ -139,7 +139,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nonos-browser-windows-x86_64
-          path: ui/src-tauri/target/release/bundle/msi/*.msi
+          path: target/release/bundle/msi/*.msi
           if-no-files-found: warn
 
   release:

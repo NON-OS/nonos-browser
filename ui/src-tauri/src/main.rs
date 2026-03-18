@@ -58,63 +58,65 @@ fn main() {
             window
                 .eval(
                     r#"
+                const invoke = window.__TAURI__.core.invoke;
+                const listen = window.__TAURI__.event.listen;
                 window.nonos = {
                     version: '1.0.5',
                     network: {
-                        connect: () => window.__TAURI__.invoke('network_connect'),
-                        disconnect: () => window.__TAURI__.invoke('network_disconnect'),
-                        getStatus: () => window.__TAURI__.invoke('network_get_status'),
-                        newIdentity: () => window.__TAURI__.invoke('network_new_identity'),
+                        connect: () => invoke('network_connect'),
+                        disconnect: () => invoke('network_disconnect'),
+                        getStatus: () => invoke('network_get_status'),
+                        newIdentity: () => invoke('network_new_identity'),
                     },
                     wallet: {
-                        getStatus: () => window.__TAURI__.invoke('wallet_get_status'),
-                        create: (password) => window.__TAURI__.invoke('wallet_create', { password }),
-                        import: (mnemonic, password) => window.__TAURI__.invoke('wallet_import', { mnemonic, password }),
-                        unlock: (password) => window.__TAURI__.invoke('wallet_unlock', { password }),
-                        lock: () => window.__TAURI__.invoke('wallet_lock'),
-                        getAddress: () => window.__TAURI__.invoke('wallet_get_address'),
-                        sendEth: (to, amount) => window.__TAURI__.invoke('wallet_send_eth', { to, amount: String(amount) }),
-                        sendNox: (to, amount) => window.__TAURI__.invoke('wallet_send_nox', { to, amount: String(amount) }),
-                        getTransactions: () => window.__TAURI__.invoke('wallet_get_transactions'),
-                        exists: () => window.__TAURI__.invoke('wallet_check_exists'),
-                        getStealthAddress: () => window.__TAURI__.invoke('wallet_get_stealth_address'),
-                        changePassword: (oldPassword, newPassword) => window.__TAURI__.invoke('wallet_change_password', { oldPassword, newPassword }),
-                        getSelectedNetwork: () => window.__TAURI__.invoke('get_selected_network'),
-                        setSelectedNetwork: (network) => window.__TAURI__.invoke('set_selected_network', { network }),
+                        getStatus: () => invoke('wallet_get_status'),
+                        create: (password) => invoke('wallet_create', { password }),
+                        import: (mnemonic, password) => invoke('wallet_import', { mnemonic, password }),
+                        unlock: (password) => invoke('wallet_unlock', { password }),
+                        lock: () => invoke('wallet_lock'),
+                        getAddress: () => invoke('wallet_get_address'),
+                        sendEth: (to, amount) => invoke('wallet_send_eth', { to, amount: String(amount) }),
+                        sendNox: (to, amount) => invoke('wallet_send_nox', { to, amount: String(amount) }),
+                        getTransactions: () => invoke('wallet_get_transactions'),
+                        exists: () => invoke('wallet_check_exists'),
+                        getStealthAddress: () => invoke('wallet_get_stealth_address'),
+                        changePassword: (oldPassword, newPassword) => invoke('wallet_change_password', { oldPassword, newPassword }),
+                        getSelectedNetwork: () => invoke('get_selected_network'),
+                        setSelectedNetwork: (network) => invoke('set_selected_network', { network }),
                     },
                     staking: {
-                        getStatus: () => window.__TAURI__.invoke('staking_get_status'),
-                        stake: (amount) => window.__TAURI__.invoke('staking_stake', { amount }),
-                        unstake: (amount) => window.__TAURI__.invoke('staking_unstake', { amount }),
-                        claimRewards: () => window.__TAURI__.invoke('staking_claim_rewards'),
-                        withdraw: () => window.__TAURI__.invoke('staking_withdraw'),
+                        getStatus: () => invoke('staking_get_status'),
+                        stake: (amount) => invoke('staking_stake', { amount }),
+                        unstake: (amount) => invoke('staking_unstake', { amount }),
+                        claimRewards: () => invoke('staking_claim_rewards'),
+                        withdraw: () => invoke('staking_withdraw'),
                     },
                     lpStaking: {
-                        getStatus: () => window.__TAURI__.invoke('lp_get_status'),
-                        getTiers: () => window.__TAURI__.invoke('lp_get_tiers'),
-                        lock: (amount, tier) => window.__TAURI__.invoke('lp_lock', { amount: String(amount), tier }),
-                        unlock: (lockId) => window.__TAURI__.invoke('lp_unlock', { lockId }),
-                        earlyUnlock: (lockId) => window.__TAURI__.invoke('lp_early_unlock', { lockId }),
-                        extendLock: (lockId, newTier) => window.__TAURI__.invoke('lp_extend_lock', { lockId, newTier }),
-                        claimRewards: (lockId) => window.__TAURI__.invoke('lp_claim_rewards', { lockId }),
-                        claimAllRewards: () => window.__TAURI__.invoke('lp_claim_all_rewards'),
-                        compoundRewards: (lockId) => window.__TAURI__.invoke('lp_compound_rewards', { lockId }),
+                        getStatus: () => invoke('lp_get_status'),
+                        getTiers: () => invoke('lp_get_tiers'),
+                        lock: (amount, tier) => invoke('lp_lock', { amount: String(amount), tier }),
+                        unlock: (lockId) => invoke('lp_unlock', { lockId }),
+                        earlyUnlock: (lockId) => invoke('lp_early_unlock', { lockId }),
+                        extendLock: (lockId, newTier) => invoke('lp_extend_lock', { lockId, newTier }),
+                        claimRewards: (lockId) => invoke('lp_claim_rewards', { lockId }),
+                        claimAllRewards: () => invoke('lp_claim_all_rewards'),
+                        compoundRewards: (lockId) => invoke('lp_compound_rewards', { lockId }),
                     },
                     work: {
-                        getMetrics: () => window.__TAURI__.invoke('work_get_metrics'),
-                        getDashboard: () => window.__TAURI__.invoke('work_get_dashboard'),
-                        getEpoch: () => window.__TAURI__.invoke('work_get_epoch'),
+                        getMetrics: () => invoke('work_get_metrics'),
+                        getDashboard: () => invoke('work_get_dashboard'),
+                        getEpoch: () => invoke('work_get_epoch'),
                     },
                     node: {
-                        getStatus: () => window.__TAURI__.invoke('node_get_status'),
-                        startEmbedded: () => window.__TAURI__.invoke('node_start_embedded'),
-                        stopEmbedded: () => window.__TAURI__.invoke('node_stop_embedded'),
-                        getConnected: () => window.__TAURI__.invoke('node_get_connected'),
+                        getStatus: () => invoke('node_get_status'),
+                        startEmbedded: () => invoke('node_start_embedded'),
+                        stopEmbedded: () => invoke('node_stop_embedded'),
+                        getConnected: () => invoke('node_get_connected'),
                     },
                     browser: {
-                        navigate: (url) => window.__TAURI__.invoke('browser_navigate', { url }),
-                        getSocksProxy: () => window.__TAURI__.invoke('browser_get_socks_proxy'),
-                        proxyFetch: (url, options = {}) => window.__TAURI__.invoke('proxy_fetch', {
+                        navigate: (url) => invoke('browser_navigate', { url }),
+                        getSocksProxy: () => invoke('browser_get_socks_proxy'),
+                        proxyFetch: (url, options = {}) => invoke('proxy_fetch', {
                             url,
                             method: options.method || 'GET',
                             headers: options.headers || null,
@@ -122,26 +124,26 @@ fn main() {
                         }),
                     },
                     privacy: {
-                        getStats: () => window.__TAURI__.invoke('privacy_get_stats'),
-                        checkTracking: (domain) => window.__TAURI__.invoke('privacy_check_tracking', { domain }),
-                        blockDomain: (domain) => window.__TAURI__.invoke('privacy_block_domain', { domain }),
-                        generateIdentity: (name) => window.__TAURI__.invoke('privacy_generate_identity', { name }),
-                        getIdentityRoot: () => window.__TAURI__.invoke('privacy_get_identity_root'),
-                        cacheStore: (content) => window.__TAURI__.invoke('privacy_cache_store', { content }),
+                        getStats: () => invoke('privacy_get_stats'),
+                        checkTracking: (domain) => invoke('privacy_check_tracking', { domain }),
+                        blockDomain: (domain) => invoke('privacy_block_domain', { domain }),
+                        generateIdentity: (name) => invoke('privacy_generate_identity', { name }),
+                        getIdentityRoot: () => invoke('privacy_get_identity_root'),
+                        cacheStore: (content) => invoke('privacy_cache_store', { content }),
                     },
-                    getAppInfo: () => window.__TAURI__.invoke('get_app_info'),
-                    getContractAddresses: () => window.__TAURI__.invoke('get_contract_addresses'),
+                    getAppInfo: () => invoke('get_app_info'),
+                    getContractAddresses: () => invoke('get_contract_addresses'),
                     onNetworkStatus: (callback) => {
-                        return window.__TAURI__.event.listen('nonos://network-status', (event) => callback(event.payload));
+                        return listen('nonos://network-status', (event) => callback(event.payload));
                     },
                     onIdentityChanged: (callback) => {
-                        return window.__TAURI__.event.listen('nonos://identity-changed', callback);
+                        return listen('nonos://identity-changed', callback);
                     },
                     onNodeStarted: (callback) => {
-                        return window.__TAURI__.event.listen('nonos://node-started', callback);
+                        return listen('nonos://node-started', callback);
                     },
                     onNodeStopped: (callback) => {
-                        return window.__TAURI__.event.listen('nonos://node-stopped', callback);
+                        return listen('nonos://node-stopped', callback);
                     },
                 };
             "#,

@@ -45,15 +45,28 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
         }
     };
 
-    let client_id = format!(
-        "nonos-{}",
-        uuid::Uuid::new_v4()
-            .to_string()
-            .split('-')
-            .next()
-            .unwrap_or("client")
-    );
+    let client_id = "nonos-client".to_string();
     network.status = ConnectionStatus::Bootstrapping;
+
+    let config_path = dirs::home_dir()
+        .unwrap_or_default()
+        .join(".nym/socks5-clients")
+        .join(&client_id);
+
+    if !config_path.exists() {
+        drop(network);
+        let _ = Command::new(&nym_path)
+            .args([
+                "init",
+                "--id",
+                &client_id,
+                "--provider",
+                "4yRfauFzZnejJhG2FACTVQ7UnYEcFUYw3HzXrmuwLMaR.Bk85p86AEbkAR73wvJrqGKnWUq1okLPJatFwxsaDWpvE@EBT8jTD8o4tKng2NXrrcrzVhJiBnKpT1bJy5CMeArt2w",
+            ])
+            .output()
+            .await;
+        network = network_state.write().await;
+    }
 
     let mut child = Command::new(&nym_path)
         .args([

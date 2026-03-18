@@ -38,14 +38,27 @@ pub async fn network_connect(
     network.status = ConnectionStatus::Bootstrapping;
     status::emit_status(&window, &network);
 
-    let client_id = format!(
-        "nonos-{}",
-        uuid::Uuid::new_v4()
-            .to_string()
-            .split('-')
-            .next()
-            .unwrap_or("client")
-    );
+    let client_id = "nonos-client".to_string();
+
+    let config_path = dirs::home_dir()
+        .unwrap_or_default()
+        .join(".nym/socks5-clients")
+        .join(&client_id);
+
+    if !config_path.exists() {
+        drop(network);
+        let _ = Command::new(&nym_path)
+            .args([
+                "init",
+                "--id",
+                &client_id,
+                "--provider",
+                "4yRfauFzZnejJhG2FACTVQ7UnYEcFUYw3HzXrmuwLMaR.Bk85p86AEbkAR73wvJrqGKnWUq1okLPJatFwxsaDWpvE@EBT8jTD8o4tKng2NXrrcrzVhJiBnKpT1bJy5CMeArt2w",
+            ])
+            .output()
+            .await;
+        network = state.network.write().await;
+    }
 
     let mut child = Command::new(&nym_path)
         .args([

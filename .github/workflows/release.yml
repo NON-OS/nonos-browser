@@ -57,6 +57,7 @@ jobs:
         with:
           name: nonos-browser-macos-${{ matrix.arch }}
           path: ui/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
 
   build-linux:
     name: Linux (x86_64)
@@ -95,12 +96,14 @@ jobs:
         with:
           name: nonos-browser-linux-x86_64
           path: ui/src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: warn
 
       - name: Upload Deb
         uses: actions/upload-artifact@v4
         with:
           name: nonos-browser-linux-deb
           path: ui/src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: warn
 
   build-windows:
     name: Windows (x86_64)
@@ -137,6 +140,7 @@ jobs:
         with:
           name: nonos-browser-windows-x86_64
           path: ui/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: warn
 
   release:
     name: Create Release
@@ -150,7 +154,8 @@ jobs:
           path: artifacts
 
       - name: Display artifacts
-        run: ls -R artifacts
+        run: ls -R artifacts || echo "No artifacts directory"
+        continue-on-error: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

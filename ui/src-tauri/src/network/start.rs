@@ -1,38 +1,29 @@
 use crate::proxy::set_proxy_connected;
-use crate::state::{AppState, ConnectionStatus};
-use crate::types::NetworkStatusResponse;
-use tauri::{State, Window};
+use crate::state::{ConnectionStatus, NetworkState};
+use std::process::Stdio;
+use std::sync::Arc;
+use tokio::process::Command;
+use tokio::sync::RwLock;
 
 use super::health::{socks5_probe, wait_for_socks};
 use super::locate::find_nym_binary;
 use super::provider::get_provider;
-use super::status;
-use std::process::Stdio;
-use tokio::process::Command;
 
-#[tauri::command]
-pub async fn network_connect(
-    state: State<'_, AppState>,
-    window: Window,
-) -> Result<NetworkStatusResponse, String> {
-    let mut network = state.network.write().await;
+pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), String> {
+    let mut network = network_state.write().await;
 
     if matches!(network.status, ConnectionStatus::Connected) {
-        return Ok(status::create_response(&network));
+        return Ok(());
     }
 
     if socks5_probe(network.socks_addr).await.is_ok() {
         network.status = ConnectionStatus::Connected;
         network.bootstrap_progress = 100;
         set_proxy_connected(true);
-        status::emit_status(&window, &network);
-        return Ok(status::create_response(&network));
+        return Ok(());
     }
 
     network.status = ConnectionStatus::Connecting;
-    network.error = None;
-    status::emit_status(&window, &network);
-
     let socks_addr = network.socks_addr;
     let data_dir = network.data_dir.clone();
     drop(network);
@@ -40,17 +31,15 @@ pub async fn network_connect(
     tokio::fs::create_dir_all(&data_dir).await.ok();
 
     let nym_path = find_nym_binary().await?;
-
-    let mut network = state.network.write().await;
-    network.status = ConnectionStatus::Bootstrapping;
-    status::emit_status(&window, &network);
-    drop(network);
-
     let client_id = "nonos-client";
     let provider = get_provider().await;
     let port = socks_addr.port().to_string();
 
     init_client(&nym_path, client_id, &provider).await?;
+
+    let mut network = network_state.write().await;
+    network.status = ConnectionStatus::Bootstrapping;
+    drop(network);
 
     let child = Command::new(&nym_path)
         .args(["run", "--id", client_id, "--port", &port, "--fastmode"])
@@ -59,19 +48,17 @@ pub async fn network_connect(
         .spawn()
         .map_err(|e| format!("Failed to start Nym: {}", e))?;
 
-    let mut network = state.network.write().await;
+    let mut network = network_state.write().await;
     network.nym_pid = child.id();
     drop(network);
 
     wait_for_socks(socks_addr, 30).await?;
 
-    let mut network = state.network.write().await;
+    let mut network = network_state.write().await;
     network.status = ConnectionStatus::Connected;
     network.bootstrap_progress = 100;
     set_proxy_connected(true);
-    status::emit_status(&window, &network);
-
-    Ok(status::create_response(&network))
+    Ok(())
 }
 
 async fn init_client(
@@ -83,7 +70,6 @@ async fn init_client(
         .unwrap_or_default()
         .join(".nym/socks5-clients")
         .join(client_id);
-
     if config.exists() {
         return Ok(());
     }
@@ -100,6 +86,5 @@ async fn init_client(
             String::from_utf8_lossy(&output.stderr)
         ));
     }
-
     Ok(())
 }

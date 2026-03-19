@@ -3,6 +3,7 @@ use crate::state::{AppState, ConnectionStatus};
 use crate::types::NetworkStatusResponse;
 use tauri::{Emitter, State, Window};
 
+use super::health::socks5_probe;
 use super::status;
 
 #[tauri::command]
@@ -10,44 +11,53 @@ pub async fn network_disconnect(state: State<'_, AppState>, window: Window) -> R
     let mut network = state.network.write().await;
 
     if let Some(pid) = network.nym_pid.take() {
-        #[cfg(unix)]
-        {
-            use std::process::Command as StdCommand;
-            let _ = StdCommand::new("kill").arg(pid.to_string()).output();
-        }
-        #[cfg(windows)]
-        {
-            use std::process::Command as StdCommand;
-            let _ = StdCommand::new("taskkill")
-                .args(&["/PID", &pid.to_string(), "/F"])
-                .output();
-        }
+        kill_nym_process(pid).await;
     }
 
     network.status = ConnectionStatus::Disconnected;
     network.bootstrap_progress = 0;
-    network.circuits = 0;
     network.error = None;
     set_proxy_connected(false);
-
     status::emit_status(&window, &network);
+
     Ok(())
+}
+
+async fn kill_nym_process(pid: u32) {
+    #[cfg(unix)]
+    {
+        use std::process::Command;
+        Command::new("kill")
+            .args(["-15", &pid.to_string()])
+            .output()
+            .ok();
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        Command::new("kill")
+            .args(["-9", &pid.to_string()])
+            .output()
+            .ok();
+    }
+    #[cfg(windows)]
+    {
+        use std::process::Command;
+        Command::new("taskkill")
+            .args(["/F", "/PID", &pid.to_string()])
+            .output()
+            .ok();
+    }
 }
 
 #[tauri::command]
 pub async fn network_get_status(
     state: State<'_, AppState>,
 ) -> Result<NetworkStatusResponse, String> {
-    use tokio::net::TcpStream;
-
     let mut network = state.network.write().await;
 
     if !matches!(network.status, ConnectionStatus::Connected)
-        && TcpStream::connect(network.socks_addr).await.is_ok()
+        && socks5_probe(network.socks_addr).await.is_ok()
     {
         network.status = ConnectionStatus::Connected;
         network.bootstrap_progress = 100;
-        network.circuits = 3;
         set_proxy_connected(true);
     }
 
@@ -59,13 +69,12 @@ pub async fn network_new_identity(
     state: State<'_, AppState>,
     window: Window,
 ) -> Result<(), String> {
-    let network = state.network.read().await;
-
-    if !matches!(network.status, ConnectionStatus::Connected) {
-        return Err("Not connected".into());
+    {
+        let network = state.network.read().await;
+        if !matches!(network.status, ConnectionStatus::Connected) {
+            return Err("Not connected".into());
+        }
     }
-
-    drop(network);
 
     network_disconnect(state.clone(), window.clone()).await?;
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;

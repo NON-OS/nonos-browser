@@ -45,6 +45,7 @@ fn main() {
         .manage(state)
         .setup(move |app| {
             let window = app.get_webview_window("main").unwrap();
+            let app_handle = app.handle().clone();
 
             tauri::async_runtime::spawn(async move {
                 proxy::start_local_proxy_server().await;
@@ -52,7 +53,7 @@ fn main() {
 
             let network_for_spawn = network_state_for_setup.clone();
             tauri::async_runtime::spawn(async move {
-                let _ = network::auto_start_nym(network_for_spawn).await;
+                let _ = network::auto_start_nym(network_for_spawn, app_handle).await;
             });
 
             window

@@ -1,7 +1,9 @@
 use crate::proxy::set_proxy_connected;
 use crate::state::{ConnectionStatus, NetworkState, PrivacyMode};
+use crate::types::NetworkStatusResponse;
 use std::process::Stdio;
 use std::sync::Arc;
+use tauri::{AppHandle, Emitter};
 use tokio::process::Command;
 use tokio::sync::RwLock;
 
@@ -9,7 +11,22 @@ use super::health::{socks5_probe, wait_for_socks};
 use super::locate::find_nym_binary;
 use super::provider::get_provider;
 
-pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), String> {
+fn emit_status(app: &AppHandle, network: &NetworkState) {
+    let response = NetworkStatusResponse {
+        connected: matches!(network.status, ConnectionStatus::Connected),
+        status: format!("{:?}", network.status),
+        bootstrap_progress: network.bootstrap_progress,
+        circuits: network.circuits,
+        socks_port: network.socks_addr.port(),
+        error: network.error.clone(),
+    };
+    let _ = app.emit("nonos://network-status", response);
+}
+
+pub async fn auto_start(
+    network_state: Arc<RwLock<NetworkState>>,
+    app: AppHandle,
+) -> Result<(), String> {
     let mut network = network_state.write().await;
 
     if matches!(network.status, ConnectionStatus::Connected) {
@@ -24,10 +41,12 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
         network.status = ConnectionStatus::Connected;
         network.bootstrap_progress = 100;
         set_proxy_connected(true);
+        emit_status(&app, &network);
         return Ok(());
     }
 
     network.status = ConnectionStatus::Connecting;
+    emit_status(&app, &network);
     let socks_addr = network.socks_addr;
     let data_dir = network.data_dir.clone();
     let use_fastmode = network.privacy_mode.use_fastmode();
@@ -44,6 +63,7 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
 
     let mut network = network_state.write().await;
     network.status = ConnectionStatus::Bootstrapping;
+    emit_status(&app, &network);
     drop(network);
 
     let mut args = vec!["run", "--id", client_id, "--port", &port];
@@ -86,6 +106,7 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
     network.status = ConnectionStatus::Connected;
     network.bootstrap_progress = 100;
     set_proxy_connected(true);
+    emit_status(&app, &network);
     Ok(())
 }
 

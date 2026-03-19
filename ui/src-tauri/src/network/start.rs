@@ -62,12 +62,68 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
     network.nym_pid = child.id();
     drop(network);
 
-    wait_for_socks(socks_addr, 30).await?;
+    if wait_for_socks(socks_addr, 15).await.is_err() {
+        kill_nym(child.id()).await;
+        reset_client(client_id).await;
+        let fresh_provider = get_provider().await;
+        reinit_client(&nym_path, client_id, &fresh_provider).await?;
+
+        let child = Command::new(&nym_path)
+            .args(&args)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|e| format!("Retry failed: {}", e))?;
+
+        let mut network = network_state.write().await;
+        network.nym_pid = child.id();
+        drop(network);
+
+        wait_for_socks(socks_addr, 30).await?;
+    }
 
     let mut network = network_state.write().await;
     network.status = ConnectionStatus::Connected;
     network.bootstrap_progress = 100;
     set_proxy_connected(true);
+    Ok(())
+}
+
+async fn kill_nym(pid: Option<u32>) {
+    if let Some(p) = pid {
+        #[cfg(unix)]
+        {
+            use std::process::Command as StdCommand;
+            StdCommand::new("kill").arg(p.to_string()).output().ok();
+        }
+    }
+    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+}
+
+async fn reset_client(client_id: &str) {
+    if let Some(home) = dirs::home_dir() {
+        let config_dir = home.join(".nym/socks5-clients").join(client_id);
+        tokio::fs::remove_dir_all(&config_dir).await.ok();
+    }
+}
+
+async fn reinit_client(
+    nym_path: &std::path::Path,
+    client_id: &str,
+    provider: &str,
+) -> Result<(), String> {
+    let output = Command::new(nym_path)
+        .args(["init", "--id", client_id, "--provider", provider])
+        .output()
+        .await
+        .map_err(|e| format!("Reinit failed: {}", e))?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "Reinit error: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
     Ok(())
 }
 

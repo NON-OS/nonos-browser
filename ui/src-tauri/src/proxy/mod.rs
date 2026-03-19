@@ -1,5 +1,6 @@
 mod rewrite;
 mod server;
+mod session;
 mod socks;
 
 use std::sync::atomic::{AtomicBool, Ordering};

@@ -1,8 +1,10 @@
+mod action;
 mod attr;
 mod config;
 mod css;
 mod meta;
 mod script;
+mod srcset;
 mod strip;
 mod url;
 
@@ -27,9 +29,9 @@ pub fn html(html: &str, page_url: &str) -> Vec<u8> {
         out = attr::rewrite_attr_full(&out, a, &base, &full_base, &proxy);
     }
 
-    out = attr::rewrite_srcset(&out, &base, &proxy);
+    out = srcset::rewrite_srcset(&out, &base, &proxy);
     out = css::rewrite_style_attr(&out, &base, &proxy);
-    out = attr::rewrite_action(&out, &base, &proxy);
+    out = action::rewrite_action(&out, &base, &proxy);
     out = meta::rewrite_meta_refresh(&out, &base, &proxy);
     out = meta::rewrite_meta_content_urls(&out, &base, &proxy);
     out = strip::strip_integrity(&out);

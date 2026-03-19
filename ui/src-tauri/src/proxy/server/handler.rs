@@ -2,21 +2,11 @@ use http_body_util::Full;
 use hyper::body::Bytes;
 use hyper::{body::Incoming, Request, Response};
 
-use super::super::{rewrite, socks};
+use super::super::{rewrite, session, socks};
 use super::{css, response, security};
 
 pub async fn handle(req: Request<Incoming>) -> Result<Response<Full<Bytes>>, hyper::Error> {
-    let origin = req
-        .headers()
-        .get("origin")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-    let allowed = origin.is_empty()
-        || origin.starts_with("tauri://")
-        || origin.starts_with("http://localhost")
-        || origin.starts_with("https://tauri.localhost");
-
-    if !allowed {
+    if !validate_request(&req) {
         return Ok(response::error_response(403, "Forbidden"));
     }
 
@@ -30,39 +20,61 @@ pub async fn handle(req: Request<Incoming>) -> Result<Response<Full<Bytes>>, hyp
     };
 
     if security::is_private_url(&url) {
-        return Ok(response::error_response(
-            403,
-            "Access to private networks blocked",
-        ));
+        return Ok(response::error_response(403, "Private network blocked"));
     }
 
     match socks::fetch(&url).await {
         Ok((status, content_type, body)) => {
-            let final_body = if content_type.contains("text/html") {
-                let html = String::from_utf8_lossy(&body);
-                let html_with_css = css::inline_css(&html, &url).await;
-                rewrite::html(&html_with_css, &url)
-            } else if content_type.contains("text/css") {
-                let css_str = String::from_utf8_lossy(&body);
-                rewrite::css(&css_str, &url)
-            } else {
-                body
-            };
-
-            Ok(Response::builder()
-                .status(status)
-                .header("Content-Type", content_type)
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-                .header("Access-Control-Allow-Headers", "*")
-                .body(Full::new(Bytes::from(final_body)))
-                .unwrap())
+            let final_body = process_body(&content_type, &body, &url).await;
+            Ok(build_response(status, &content_type, final_body))
         }
-        Err(e) => Ok(response::error_response(
-            502,
-            &format!("Connection failed: {}", e),
-        )),
+        Err(e) => Ok(response::error_response(502, &format!("Failed: {}", e))),
     }
+}
+
+fn validate_request(req: &Request<Incoming>) -> bool {
+    let token = req
+        .headers()
+        .get("x-nonos-session")
+        .and_then(|v| v.to_str().ok());
+
+    if let Some(t) = token {
+        return session::validate_session(t);
+    }
+
+    let origin = req
+        .headers()
+        .get("origin")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    origin.is_empty()
+        || origin.starts_with("tauri://")
+        || origin.starts_with("http://localhost")
+        || origin.starts_with("https://tauri.localhost")
+}
+
+async fn process_body(content_type: &str, body: &[u8], url: &str) -> Vec<u8> {
+    if content_type.contains("text/html") {
+        let html = String::from_utf8_lossy(body);
+        let with_css = css::inline_css(&html, url).await;
+        rewrite::html(&with_css, url)
+    } else if content_type.contains("text/css") {
+        let css_str = String::from_utf8_lossy(body);
+        rewrite::css(&css_str, url)
+    } else {
+        body.to_vec()
+    }
+}
+
+fn build_response(status: u16, content_type: &str, body: Vec<u8>) -> Response<Full<Bytes>> {
+    Response::builder()
+        .status(status)
+        .header("Content-Type", content_type)
+        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        .header("Access-Control-Allow-Headers", "*")
+        .body(Full::new(Bytes::from(body)))
+        .unwrap()
 }
 
 fn extract_url(query: Option<&str>) -> Option<String> {

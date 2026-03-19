@@ -1,38 +1,9 @@
-use super::scoring::{
-    calculate_entropy_score, calculate_mixer_score, calculate_registry_score,
-    calculate_traffic_score, calculate_zk_score,
-};
-use super::types::{
-    EpochInfo, WorkCategoryBreakdown, WorkDashboard, WorkMetrics, WorkMetricsResponse,
-    DAEMON_API_URL,
-};
+use super::fetch::fetch_work_metrics;
+use super::scoring::*;
+use super::types::{EpochInfo, WorkCategoryBreakdown, WorkDashboard, WorkMetrics, DAEMON_API_URL};
 use crate::state::AppState;
 use serde::Deserialize;
 use tauri::State;
-
-async fn fetch_work_metrics() -> Result<WorkMetrics, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
-
-    let url = format!("{}/api/v1/work/metrics", DAEMON_API_URL);
-    let response = client
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| format!("Failed to connect to daemon: {}", e))?;
-
-    if !response.status().is_success() {
-        return Err(format!("Daemon returned error: {}", response.status()));
-    }
-
-    let data: WorkMetricsResponse = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
-    Ok(data.data)
-}
 
 #[tauri::command]
 pub async fn work_get_metrics(_state: State<'_, AppState>) -> Result<WorkMetrics, String> {
@@ -102,10 +73,10 @@ pub async fn work_get_epoch(_state: State<'_, AppState>) -> Result<EpochInfo, St
         .get(&url)
         .send()
         .await
-        .map_err(|e| format!("Failed to connect to daemon: {}", e))?;
+        .map_err(|e| format!("Failed: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Daemon returned error: {}", response.status()));
+        return Err(format!("Daemon error: {}", response.status()));
     }
 
     #[derive(Deserialize)]
@@ -119,7 +90,7 @@ pub async fn work_get_epoch(_state: State<'_, AppState>) -> Result<EpochInfo, St
     let data: EpochResponse = response
         .json()
         .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
+        .map_err(|e| format!("Parse error: {}", e))?;
     Ok(EpochInfo {
         current_epoch: data.epoch,
         epoch_start_timestamp: data.epoch_start,

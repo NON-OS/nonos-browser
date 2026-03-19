@@ -13,7 +13,7 @@ pub async fn staking_stake(_state: State<'_, AppState>, amount: String) -> Resul
     let amount_nox = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_nox * 1e18) as u128;
 
-    let (_, balance) = fetch_sepolia_balances(&address).await;
+    let (_, balance) = fetch_sepolia_balances(&address).await?;
     if amount_wei > balance {
         return Err(format!(
             "Insufficient balance: have {} NOX",

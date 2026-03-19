@@ -30,7 +30,7 @@ pub async fn lp_lock(
     let amount_nox = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_nox * 1e18) as u128;
 
-    let (_, sepolia_nox) = fetch_sepolia_balances(&address).await;
+    let (_, sepolia_nox) = fetch_sepolia_balances(&address).await?;
     if amount_wei > sepolia_nox {
         return Err(format!(
             "Insufficient NOX balance. Have {} NOX, locking {} NOX",

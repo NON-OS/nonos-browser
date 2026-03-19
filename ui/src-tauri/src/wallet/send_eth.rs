@@ -26,7 +26,7 @@ pub async fn wallet_send_eth(
     let amount_eth = validate_amount(&amount).map_err(|e| e.to_string())?;
     let amount_wei = (amount_eth * 1e18) as u128;
 
-    let (eth_balance, _) = fetch_mainnet_balances(&from_address).await;
+    let (eth_balance, _) = fetch_mainnet_balances(&from_address).await?;
     if amount_wei > eth_balance {
         return Err(format!(
             "Insufficient ETH. Have {}, sending {}",

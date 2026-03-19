@@ -19,8 +19,8 @@ pub async fn wallet_get_status(state: State<'_, AppState>) -> Result<WalletStatu
     drop(manager);
 
     let (eth_balance, nox_balance, sepolia_eth, sepolia_nox) = if let Some(ref addr) = address {
-        let (mainnet_eth, mainnet_nox) = fetch_mainnet_balances(addr).await;
-        let (sep_eth, sep_nox) = fetch_sepolia_balances(addr).await;
+        let (mainnet_eth, mainnet_nox) = fetch_mainnet_balances(addr).await?;
+        let (sep_eth, sep_nox) = fetch_sepolia_balances(addr).await?;
         (mainnet_eth, mainnet_nox, sep_eth, sep_nox)
     } else {
         (0, 0, 0, 0)

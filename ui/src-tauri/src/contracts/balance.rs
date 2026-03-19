@@ -1,11 +1,11 @@
 use super::{
-    client::build_client,
+    client::build_verified_client,
     config::{Network, BALANCE_OF_SELECTOR, NOX_TOKEN_ADDRESS_MAINNET, NOX_TOKEN_ADDRESS_SEPOLIA},
     rpc::eth_call,
 };
 
 pub async fn get_eth_balance(network: Network, address: &str) -> Result<u128, String> {
-    let client = build_client()?;
+    let client = build_verified_client().await?;
 
     for endpoint in network.rpc_endpoints() {
         let payload = serde_json::json!({
@@ -53,22 +53,14 @@ pub async fn get_token_balance(
     u128::from_str_radix(hex, 16).map_err(|e| format!("Parse error: {}", e))
 }
 
-pub async fn fetch_mainnet_balances(address: &str) -> (u128, u128) {
-    let eth = get_eth_balance(Network::Mainnet, address)
-        .await
-        .unwrap_or(0);
-    let nox = get_token_balance(Network::Mainnet, NOX_TOKEN_ADDRESS_MAINNET, address)
-        .await
-        .unwrap_or(0);
-    (eth, nox)
+pub async fn fetch_mainnet_balances(address: &str) -> Result<(u128, u128), String> {
+    let eth = get_eth_balance(Network::Mainnet, address).await?;
+    let nox = get_token_balance(Network::Mainnet, NOX_TOKEN_ADDRESS_MAINNET, address).await?;
+    Ok((eth, nox))
 }
 
-pub async fn fetch_sepolia_balances(address: &str) -> (u128, u128) {
-    let eth = get_eth_balance(Network::Sepolia, address)
-        .await
-        .unwrap_or(0);
-    let nox = get_token_balance(Network::Sepolia, NOX_TOKEN_ADDRESS_SEPOLIA, address)
-        .await
-        .unwrap_or(0);
-    (eth, nox)
+pub async fn fetch_sepolia_balances(address: &str) -> Result<(u128, u128), String> {
+    let eth = get_eth_balance(Network::Sepolia, address).await?;
+    let nox = get_token_balance(Network::Sepolia, NOX_TOKEN_ADDRESS_SEPOLIA, address).await?;
+    Ok((eth, nox))
 }

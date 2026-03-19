@@ -1,5 +1,5 @@
 use crate::proxy::set_proxy_connected;
-use crate::state::{AppState, ConnectionStatus};
+use crate::state::{AppState, ConnectionStatus, PrivacyMode};
 use crate::types::NetworkStatusResponse;
 use tauri::{State, Window};
 
@@ -14,8 +14,16 @@ use tokio::process::Command;
 pub async fn network_connect(
     state: State<'_, AppState>,
     window: Window,
+    privacy_mode: Option<PrivacyMode>,
 ) -> Result<NetworkStatusResponse, String> {
+    let mode = privacy_mode.unwrap_or_default();
+
+    if matches!(mode, PrivacyMode::Unsafe) {
+        return Err("Unsafe mode (clearnet) is disabled for security".into());
+    }
+
     let mut network = state.network.write().await;
+    network.privacy_mode = mode;
 
     if matches!(network.status, ConnectionStatus::Connected) {
         return Ok(status::create_response(&network));
@@ -35,6 +43,7 @@ pub async fn network_connect(
 
     let socks_addr = network.socks_addr;
     let data_dir = network.data_dir.clone();
+    let use_fastmode = mode.use_fastmode();
     drop(network);
 
     tokio::fs::create_dir_all(&data_dir).await.ok();
@@ -52,8 +61,13 @@ pub async fn network_connect(
 
     init_client(&nym_path, client_id, &provider).await?;
 
+    let mut args = vec!["run", "--id", client_id, "--port", &port];
+    if use_fastmode {
+        args.push("--fastmode");
+    }
+
     let child = Command::new(&nym_path)
-        .args(["run", "--id", client_id, "--port", &port, "--fastmode"])
+        .args(&args)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
@@ -101,5 +115,25 @@ async fn init_client(
         ));
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn network_get_privacy_mode(state: State<'_, AppState>) -> Result<PrivacyMode, String> {
+    let network = state.network.read().await;
+    Ok(network.privacy_mode)
+}
+
+#[tauri::command]
+pub async fn network_set_privacy_mode(
+    state: State<'_, AppState>,
+    mode: PrivacyMode,
+) -> Result<(), String> {
+    if matches!(mode, PrivacyMode::Unsafe) {
+        return Err("Unsafe mode is disabled for security".into());
+    }
+
+    let mut network = state.network.write().await;
+    network.privacy_mode = mode;
     Ok(())
 }

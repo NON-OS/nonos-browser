@@ -1,4 +1,4 @@
-use super::types::ConnectionStatus;
+use super::types::{ConnectionStatus, PrivacyMode};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
@@ -11,6 +11,7 @@ pub struct NetworkState {
     pub error: Option<String>,
     pub nym_pid: Option<u32>,
     pub data_dir: PathBuf,
+    pub privacy_mode: PrivacyMode,
 }
 
 impl Default for NetworkState {
@@ -28,6 +29,7 @@ impl Default for NetworkState {
             error: None,
             nym_pid: None,
             data_dir,
+            privacy_mode: PrivacyMode::default(),
         }
     }
 }

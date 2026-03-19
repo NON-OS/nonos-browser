@@ -69,16 +69,17 @@ pub async fn network_new_identity(
     state: State<'_, AppState>,
     window: Window,
 ) -> Result<(), String> {
-    {
+    let current_mode = {
         let network = state.network.read().await;
         if !matches!(network.status, ConnectionStatus::Connected) {
             return Err("Not connected".into());
         }
-    }
+        network.privacy_mode
+    };
 
     network_disconnect(state.clone(), window.clone()).await?;
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    super::commands::network_connect(state, window.clone()).await?;
+    super::commands::network_connect(state, window.clone(), Some(current_mode)).await?;
 
     window
         .emit("nonos://identity-changed", ())

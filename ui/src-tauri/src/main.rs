@@ -156,6 +156,8 @@ fn main() {
             get_app_info,
             contracts::commands::get_contract_addresses,
             network::commands::network_connect,
+            network::commands::network_get_privacy_mode,
+            network::commands::network_set_privacy_mode,
             network::disconnect::network_disconnect,
             network::disconnect::network_get_status,
             network::disconnect::network_new_identity,

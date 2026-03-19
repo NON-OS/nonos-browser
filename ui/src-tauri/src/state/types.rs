@@ -10,6 +10,22 @@ pub enum ConnectionStatus {
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
+pub enum PrivacyMode {
+    Fast,
+    #[default]
+    Balanced,
+    Strong,
+    Unsafe,
+}
+
+impl PrivacyMode {
+    pub fn use_fastmode(&self) -> bool {
+        matches!(self, PrivacyMode::Fast)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
 pub enum SelectedNetwork {
     #[default]
     Mainnet,

@@ -7,7 +7,7 @@ mod wallet;
 pub use browser::BrowserState;
 pub use network::NetworkState;
 pub use node::{NodeInfo, NodeState};
-pub use types::{ConnectionStatus, SelectedNetwork};
+pub use types::{ConnectionStatus, PrivacyMode, SelectedNetwork};
 pub use wallet::WalletState;
 
 use std::sync::atomic::{AtomicU8, Ordering};

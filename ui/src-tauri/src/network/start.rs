@@ -1,5 +1,5 @@
 use crate::proxy::set_proxy_connected;
-use crate::state::{ConnectionStatus, NetworkState};
+use crate::state::{ConnectionStatus, NetworkState, PrivacyMode};
 use std::process::Stdio;
 use std::sync::Arc;
 use tokio::process::Command;
@@ -16,6 +16,10 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
         return Ok(());
     }
 
+    if matches!(network.privacy_mode, PrivacyMode::Unsafe) {
+        return Err("Cannot auto-start in Unsafe mode".into());
+    }
+
     if socks5_probe(network.socks_addr).await.is_ok() {
         network.status = ConnectionStatus::Connected;
         network.bootstrap_progress = 100;
@@ -26,6 +30,7 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
     network.status = ConnectionStatus::Connecting;
     let socks_addr = network.socks_addr;
     let data_dir = network.data_dir.clone();
+    let use_fastmode = network.privacy_mode.use_fastmode();
     drop(network);
 
     tokio::fs::create_dir_all(&data_dir).await.ok();
@@ -41,8 +46,13 @@ pub async fn auto_start(network_state: Arc<RwLock<NetworkState>>) -> Result<(), 
     network.status = ConnectionStatus::Bootstrapping;
     drop(network);
 
+    let mut args = vec!["run", "--id", client_id, "--port", &port];
+    if use_fastmode {
+        args.push("--fastmode");
+    }
+
     let child = Command::new(&nym_path)
-        .args(["run", "--id", client_id, "--port", &port, "--fastmode"])
+        .args(&args)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()

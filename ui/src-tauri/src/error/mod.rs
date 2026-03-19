@@ -1,3 +1,5 @@
-mod types;
+mod contract;
+mod wallet;
 
-pub use types::*;
+pub use contract::*;
+pub use wallet::*;

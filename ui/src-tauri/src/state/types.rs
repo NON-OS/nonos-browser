@@ -6,7 +6,6 @@ pub enum ConnectionStatus {
     Connecting,
     Bootstrapping,
     Connected,
-    Error,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]

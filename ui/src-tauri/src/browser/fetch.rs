@@ -27,9 +27,7 @@ pub async fn proxy_fetch(
     }
 
     if !is_connected {
-        return Err(
-            "Network not connected. All requests must route through Anyone Network.".into(),
-        );
+        return Err("Network not connected. All requests must route through Nym mixnet.".into());
     }
 
     let proxy = reqwest::Proxy::all(format!("socks5h://{}", socks_addr))
@@ -85,6 +83,6 @@ pub async fn proxy_fetch(
         body: body_text,
         content_type,
         via_proxy: is_connected,
-        circuit_id: Some("anon-circuit-1".to_string()),
+        circuit_id: None,
     })
 }

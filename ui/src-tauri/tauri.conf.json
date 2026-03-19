@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "productName": "NONOS Browser",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "identifier": "systems.nonos.browser",
   "build": {
     "beforeBuildCommand": "npm run build",

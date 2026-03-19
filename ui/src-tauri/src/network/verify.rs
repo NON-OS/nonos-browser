@@ -8,19 +8,8 @@ pub fn compute_sha256(data: &[u8]) -> String {
 }
 
 pub async fn verify_checksum(path: &PathBuf, expected: &str) -> Result<(), String> {
-    if expected == "VERIFY_REQUIRED" {
-        if cfg!(debug_assertions) {
-            let data = tokio::fs::read(path)
-                .await
-                .map_err(|e| format!("Read failed: {}", e))?;
-            eprintln!(
-                "[DEV] SHA256 for {}: {}",
-                path.display(),
-                compute_sha256(&data)
-            );
-            return Ok(());
-        }
-        return Err("Checksum not configured for release".into());
+    if expected.is_empty() {
+        return Err("Checksum cannot be empty".into());
     }
 
     let data = tokio::fs::read(path)

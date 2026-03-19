@@ -2,12 +2,21 @@ use http_body_util::Full;
 use hyper::body::Bytes;
 use hyper::Response;
 
+const ALLOWED_ORIGINS: [&str; 3] = [
+    "tauri://localhost",
+    "https://tauri.localhost",
+    "http://localhost",
+];
+
 pub fn cors_response(status: u16, body: &str) -> Response<Full<Bytes>> {
     Response::builder()
         .status(status)
-        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0])
         .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        .header("Access-Control-Allow-Headers", "*")
+        .header(
+            "Access-Control-Allow-Headers",
+            "x-nonos-session, content-type",
+        )
         .body(Full::new(Bytes::from(body.to_string())))
         .unwrap()
 }
@@ -24,7 +33,11 @@ pub fn error_response(status: u16, msg: &str) -> Response<Full<Bytes>> {
     Response::builder()
         .status(status)
         .header("Content-Type", "text/html")
-        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0])
         .body(Full::new(Bytes::from(body)))
         .unwrap()
+}
+
+pub fn is_allowed_origin(origin: &str) -> bool {
+    ALLOWED_ORIGINS.iter().any(|o| origin.starts_with(o))
 }

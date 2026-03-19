@@ -47,10 +47,8 @@ fn validate_request(req: &Request<Incoming>) -> bool {
         .get("origin")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    origin.is_empty()
-        || origin.starts_with("tauri://")
-        || origin.starts_with("http://localhost")
-        || origin.starts_with("https://tauri.localhost")
+
+    origin.is_empty() || response::is_allowed_origin(origin)
 }
 
 async fn process_body(content_type: &str, body: &[u8], url: &str) -> Vec<u8> {
@@ -70,9 +68,12 @@ fn build_response(status: u16, content_type: &str, body: Vec<u8>) -> Response<Fu
     Response::builder()
         .status(status)
         .header("Content-Type", content_type)
-        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Origin", "tauri://localhost")
         .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        .header("Access-Control-Allow-Headers", "*")
+        .header(
+            "Access-Control-Allow-Headers",
+            "x-nonos-session, content-type",
+        )
         .body(Full::new(Bytes::from(body)))
         .unwrap()
 }

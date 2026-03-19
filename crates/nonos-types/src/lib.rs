@@ -40,9 +40,9 @@ pub const EPOCH_DURATION_SECS: u64 = 86_400;
 
 pub const EMISSION_DECAY_RATE: f64 = 0.15;
 
-pub const ANYONE_CIRCUIT_LENGTH: usize = 3;
+pub const NYM_CIRCUIT_LENGTH: usize = 3;
 
-pub const ANYONE_CIRCUIT_ROTATION_SECS: u64 = 600;
+pub const NYM_CIRCUIT_ROTATION_SECS: u64 = 600;
 
 #[derive(Error, Debug)]
 pub enum NonosError {

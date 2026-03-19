@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	let version = '1.0.6';
+	onMount(() => { if (window.nonos?.version) version = window.nonos.version; });
 </script>
 
 <div class="sidebar-footer">
 	<div class="footer-row">
-		<span class="version">v1.0.5</span>
+		<span class="version">v{version}</span>
 		<a href="https://nonos.systems" target="_blank" rel="noopener" class="footer-link">
 			nonos.systems
 		</a>

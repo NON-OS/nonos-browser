@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "productName": "NONOS Ecosystem",
+  "productName": "NONOS Browser",
   "version": "1.0.5",
-  "identifier": "systems.nonos.noxone",
+  "identifier": "systems.nonos.browser",
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
@@ -10,9 +10,9 @@
     "frontendDist": "../build"
   },
   "app": {
-    "withGlobalTauri": true,
+    "withGlobalTauri": false,
     "security": {
-      "csp": "default-src 'self' http://localhost:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*; style-src 'self' 'unsafe-inline' http://localhost:* https://*; img-src 'self' data: blob: http://localhost:* https://*; font-src 'self' data: http://localhost:* https://*; frame-src 'self' http://localhost:*; connect-src 'self' http://localhost:* https://*"
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http://127.0.0.1:8089; frame-src 'none'; object-src 'none'; base-uri 'self'"
     },
     "windows": [
       {
@@ -20,7 +20,7 @@
         "fullscreen": false,
         "height": 800,
         "resizable": true,
-        "title": "NONOS Ecosystem",
+        "title": "NONOS Browser",
         "width": 1200,
         "center": true,
         "decorations": true,
@@ -39,7 +39,7 @@
         "depends": []
       }
     },
-    "externalBin": ["binaries/anon", "binaries/anon-gencert"],
+    "externalBin": [],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -47,7 +47,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "longDescription": "NONOS Ecosystem is a zero-trust privacy browser built on the Anyone Network. All traffic is routed through community-powered multi-hop encrypted relays with built-in NOX token wallet and node staking.",
+    "longDescription": "NONOS Browser is a privacy-focused browser with native Nym mixnet integration. All traffic is routed through encrypted multi-hop relays with built-in NOX token wallet.",
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",
@@ -56,7 +56,7 @@
       "signingIdentity": null
     },
     "resources": [],
-    "shortDescription": "Privacy-first trustless browser",
+    "shortDescription": "Privacy browser with Nym mixnet",
     "targets": "all",
     "windows": {
       "certificateThumbprint": null,

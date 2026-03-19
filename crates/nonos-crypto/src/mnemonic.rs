@@ -3,8 +3,11 @@ use nonos_types::{Blake3Key, NonosError};
 use zeroize::Zeroize;
 
 pub fn generate_mnemonic() -> Result<String, NonosError> {
+    use rand::RngCore;
+    use rand_core::OsRng;
+
     let mut entropy = [0u8; 32];
-    rand::RngCore::fill_bytes(&mut rand::thread_rng(), &mut entropy);
+    OsRng.fill_bytes(&mut entropy);
 
     let mnemonic =
         Mnemonic::from_entropy(&entropy).map_err(|e| NonosError::Crypto(e.to_string()))?;

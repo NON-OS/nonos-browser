@@ -37,8 +37,9 @@ pub use zk_proofs::*;
 
 pub fn random_bytes<const N: usize>() -> [u8; N] {
     use rand::RngCore;
+    use rand_core::OsRng;
     let mut bytes = [0u8; N];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    OsRng.fill_bytes(&mut bytes);
     bytes
 }
 

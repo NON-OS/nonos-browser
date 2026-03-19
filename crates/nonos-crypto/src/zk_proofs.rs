@@ -12,7 +12,7 @@ use ark_r1cs_std::{
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_snark::SNARK;
-use ark_std::rand::thread_rng;
+use rand_core::OsRng;
 use std::sync::OnceLock;
 
 const MERKLE_DEPTH: usize = 20;
@@ -280,7 +280,7 @@ fn initialize_identity_keys() {
         return;
     }
 
-    let mut rng = thread_rng();
+    let mut rng = OsRng;
 
     let dummy_circuit = IdentityCircuit {
         secret: Some(Fr::from(0u64)),
@@ -429,7 +429,7 @@ pub fn generate_identity_proof(
         scope: Some(scope_fr),
     };
 
-    let mut rng = thread_rng();
+    let mut rng = OsRng;
     let proof =
         Groth16::<Bn254>::prove(pk, circuit, &mut rng).map_err(|_| "Proof generation failed")?;
 
@@ -504,7 +504,7 @@ mod tests {
     use rand::RngCore;
 
     fn setup_test_tree() -> (Vec<[u8; 32]>, [u8; 32], u64, Vec<[u8; 32]>) {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
 
         let mut leaves = Vec::new();
         for _ in 0..4 {
@@ -558,7 +558,7 @@ mod tests {
 
     #[test]
     fn test_identity_proof_generation_and_verification() {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
 
         let mut secret = [0u8; 32];
         let mut blinding = [0u8; 32];
@@ -597,7 +597,7 @@ mod tests {
 
     #[test]
     fn test_nullifier_uniqueness() {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
 
         let mut secret = [0u8; 32];
         let mut blinding = [0u8; 32];
@@ -641,7 +641,7 @@ mod tests {
 
     #[test]
     fn test_proof_serialization() {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
 
         let mut secret = [0u8; 32];
         let mut blinding = [0u8; 32];
@@ -689,7 +689,7 @@ mod tests {
 
     #[test]
     fn test_tampered_proof_rejected() {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
 
         let mut secret = [0u8; 32];
         let mut blinding = [0u8; 32];
@@ -730,7 +730,7 @@ mod tests {
 
     #[test]
     fn test_wrong_merkle_root_rejected() {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
 
         let mut secret = [0u8; 32];
         let mut blinding = [0u8; 32];

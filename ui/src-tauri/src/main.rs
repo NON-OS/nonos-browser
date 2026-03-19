@@ -61,7 +61,7 @@ fn main() {
                 const invoke = window.__TAURI__.core.invoke;
                 const listen = window.__TAURI__.event.listen;
                 window.nonos = {
-                    version: '1.0.5',
+                    version: '1.0.6',
                     network: {
                         connect: () => invoke('network_connect'),
                         disconnect: () => invoke('network_disconnect'),

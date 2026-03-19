@@ -1,17 +1,68 @@
 use serde::Deserialize;
+use std::collections::HashSet;
 
-const NYM_API: &str = "https://validator.nymtech.net/api/v1/gateways";
+const HARBOURMASTER_API: &str = "https://harbourmaster.nymtech.net/v2/services";
+const NYM_NODES_API: &str = "https://validator.nymtech.net/api/v1/nym-nodes/described";
 
 #[derive(Deserialize)]
-struct Gateway {
-    gateway: GatewayInfo,
+struct HarbourmasterResponse {
+    items: Vec<ServiceProvider>,
 }
 
 #[derive(Deserialize)]
-struct GatewayInfo {
-    identity_key: String,
-    sphinx_key: String,
-    host: String,
+struct ServiceProvider {
+    service_provider_client_id: String,
+    gateway_identity_key: String,
+}
+
+#[derive(Deserialize)]
+struct NymNodesResponse {
+    data: Vec<NymNode>,
+}
+
+#[derive(Deserialize)]
+struct NymNode {
+    description: NodeDescription,
+}
+
+#[derive(Deserialize)]
+struct NodeDescription {
+    host_information: HostInfo,
+}
+
+#[derive(Deserialize)]
+struct HostInfo {
+    keys: NodeKeys,
+}
+
+#[derive(Deserialize)]
+struct NodeKeys {
+    ed25519: String,
+}
+
+async fn fetch_active_gateways(client: &reqwest::Client) -> Result<HashSet<String>, String> {
+    let response = client
+        .get(NYM_NODES_API)
+        .send()
+        .await
+        .map_err(|e| format!("Nodes API request failed: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Nodes API returned {}", response.status()));
+    }
+
+    let nodes: NymNodesResponse = response
+        .json()
+        .await
+        .map_err(|e| format!("Nodes JSON parse failed: {}", e))?;
+
+    let gateways: HashSet<String> = nodes
+        .data
+        .into_iter()
+        .map(|n| n.description.host_information.keys.ed25519)
+        .collect();
+
+    Ok(gateways)
 }
 
 pub async fn fetch_active_provider() -> Result<String, String> {
@@ -20,31 +71,38 @@ pub async fn fetch_active_provider() -> Result<String, String> {
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
-    let response = client
-        .get(NYM_API)
-        .send()
-        .await
-        .map_err(|e| format!("API request failed: {}", e))?;
+    let active_gateways = fetch_active_gateways(&client).await?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned {}", response.status()));
+    if active_gateways.is_empty() {
+        return Err("No active gateways found".to_string());
     }
 
-    let gateways: Vec<Gateway> = response
+    let response = client
+        .get(HARBOURMASTER_API)
+        .send()
+        .await
+        .map_err(|e| format!("Harbourmaster request failed: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Harbourmaster returned {}", response.status()));
+    }
+
+    let harbourmaster: HarbourmasterResponse = response
         .json()
         .await
-        .map_err(|e| format!("JSON parse failed: {}", e))?;
+        .map_err(|e| format!("Harbourmaster JSON parse failed: {}", e))?;
 
-    let gateway = gateways.first().ok_or("No active gateways found")?;
+    for provider in harbourmaster.items {
+        if active_gateways.contains(&provider.gateway_identity_key) {
+            return Ok(provider.service_provider_client_id);
+        }
+    }
 
-    Ok(format!(
-        "{}.{}@{}",
-        gateway.gateway.identity_key, gateway.gateway.sphinx_key, gateway.gateway.host
-    ))
+    Err("No service provider with active gateway found".to_string())
 }
 
 pub fn default_provider() -> &'static str {
-    "4yRfauFzZnejJhG2FACTVQ7UnYEcFUYw3HzXrmuwLMaR.Bk85p86AEbkAR73wvJrqGKnWUq1okLPJatFwxsaDWpvE@EBT8jTD8o4tKng2NXrrcrzVhJiBnKpT1bJy5CMeArt2w"
+    "HuNL1pFprNSKW6jdqppibXP5KNKCNJxDh7ivpYcoULN9.C62NahRTUf6kqpNtDVHXoVriQr6yyaU5LtxdgpbsGrtA@23A7CSaBSA2L67PWuFTPXUnYrCdyVcB7ATYsjUsfdftb"
 }
 
 pub async fn get_provider() -> String {
